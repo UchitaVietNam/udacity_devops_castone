@@ -299,7 +299,9 @@ jobs:
 workflows:
   default:
     jobs:
+      - build_and_push_docker
       - deploy-network
+          requires: [build_and_push_docker]
       - deploy-server
           requires: [build-network]
       # - build-backend
