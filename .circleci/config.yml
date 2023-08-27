@@ -33,14 +33,9 @@ jobs:
             python3 -m venv venv
             . venv/bin/activate
             make install
-            # Create a bin directory in the home directory
-            mkdir -p $HOME/bin
             # Install hadolint
-            wget -O $HOME/bin/hadolint https://github.com/hadolint/hadolint/releases/download/v1.16.3/hadolint-Linux-x86_64
-            chmod +x $HOME/bin/hadolint
-            # Add the bin directory to the PATH
-            echo 'export PATH="$HOME/bin:$PATH"' >> $HOME/.bashrc
-            source $HOME/.bashrc
+            sudo wget -O /bin/hadolint https://github.com/hadolint/hadolint/releases/download/v1.16.3/hadolint-Linux-x86_64
+            sudo chmod +x /bin/hadolint
       # run lint!
       - run:
           name: run lint
