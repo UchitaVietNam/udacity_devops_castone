@@ -303,7 +303,7 @@ workflows:
       - deploy-network
           requires: [build_and_push_docker]
       - deploy-server
-          requires: [build-network]
+          requires: [deploy-network]
       # - build-backend
       # - test-backend:
           # requires: [build-backend]
