@@ -1,0 +1,293 @@
+version: 2.1
+
+orbs:
+  aws-cli: circleci/aws-cli@3.1.1
+
+commands:
+  # dependencies:
+  #   steps:
+  #     - run:
+  #         name: Installing necessary packages
+  #         command: |
+  #           sudo apt update
+  #           sudo apt install -y tar gzip curl software-properties-common
+  #     - run:
+  #         name: Installing aws-cli
+  #         command: |
+  #           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+  #           unzip awscliv2.zip
+  #           sudo ./aws/install
+  #     - run:
+  #         name: Installing ansible
+  #         command: |
+  #           sudo add-apt-repository --yes --update ppa:ansible/ansible
+  #           sudo apt install ansible
+
+  destroy-environment:
+    description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
+    parameters:
+      Workflow_ID:
+        type: string
+        default: ${CIRCLE_WORKFLOW_ID:0:7}
+    steps:
+      - run:
+          name: Destroy environments
+          when: on_fail
+          command: |
+            echo "Destroying environment: << parameters.Workflow_ID >> "
+            aws s3 rm s3://devops-capstone-network-<<parameters.Workflow_ID>> --recursive
+            aws cloudformation delete-stack --stack-name devops-capstone-backend-<< parameters.Workflow_ID >>
+
+jobs:
+  # build-backend:
+  #   docker:
+  #     - image: circleci/node:13.8.0
+  #   steps:
+  #     - checkout
+  #     - restore_cache:
+  #         keys: [backend-build]
+  #     - run:
+  #         name: Back-end build
+  #         command: |
+  #           cd backend
+  #           npm install
+  #           npm run build
+  #     - save_cache:
+  #         paths: [backend/node_modules]
+  #         key: backend-build
+
+  # test-backend:
+  #   docker:
+  #     - image: circleci/node:13.8.0
+  #   steps:
+  #     - checkout
+  #     - restore_cache:
+  #         keys: [backend-build]
+  #     - run:
+  #         name: Test back-end
+  #         command: |
+  #           cd backend
+  #           npm i
+  #           npm run test
+
+  # scan-backend:
+  #   docker:
+  #     - image: circleci/node:13.8.0
+  #   steps:
+  #     - checkout
+  #     - restore_cache:
+  #         keys: [backend-build]
+  #     - run:
+  #         name: Scan back-end
+  #         command: |
+  #           cd backend
+  #           npm install
+  #           npm audit fix --audit-level=critical --force
+  #           npm update mkdirp --depth 2
+  #           npm audit --audit-level=critical
+
+  deploy-network:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Install tar and zip utilities
+          command: |
+            yum -y install tar gzip
+      - run:
+          name: Ensure network infrastructure exists
+          command: |
+            aws cloudformation deploy \
+              --template-file .circleci/network/network.yml \
+              --parameters file://.circleci/network/params.yml \
+              --tags project=devops-capstone-network \
+              --stack-name "devops-capstone-network-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
+      # - run:
+      #     name: Add back-end ip to ansible inventory
+      #     command: |
+      #       BACKEND_PUBLIC_IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" --query 'Reservations[*].Instances[*].PublicDnsName' --output text)
+      #       echo $BACKEND_PUBLIC_IP >> .circleci/ansible/inventory.txt
+      #       cat .circleci/ansible/inventory.txt
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - project/.circleci/ansible/inventory.txt
+      - destroy-environment
+
+  # configure-infrastructure:
+  #   docker:
+  #     - image: python:3.7-alpine3.11
+  #       environment:
+  #         NODE_ENV: "production"
+  #         VERSION: "1"
+  #         ENVIRONMENT: "production"
+  #         TYPEORM_CONNECTION: $TYPEORM_CONNECTION
+  #         TYPEORM_MIGRATIONS: $TYPEORM_MIGRATIONS
+  #         TYPEORM_MIGRATIONS_DIR: $TYPEORM_MIGRATIONS_DIR
+  #         TYPEORM_ENTITIES: $TYPEORM_ENTITIES
+  #         TYPEORM_PORT: $TYPEORM_PORT
+  #         TYPEORM_HOST: $TYPEORM_HOST
+  #         TYPEORM_USERNAME: $TYPEORM_USERNAME
+  #         TYPEORM_PASSWORD: $TYPEORM_PASSWORD
+  #         TYPEORM_DATABASE: $TYPEORM_DATABASE
+  #   steps:
+  #     - checkout
+  #     - add_ssh_keys:
+  #         fingerprints: ["fa:b2:9c:87:44:8a:52:b7:34:58:6c:cd:71:ca:d4:cb"]
+  #     - attach_workspace:
+  #         at: ~/
+  #     - run:
+  #         name: Install dependencies
+  #         command: |
+  #           apk add curl
+  #           apk add --update tar gzip ansible bash
+  #           apk add openssh-client
+  #           pip3 install awscli
+  #     - run:
+  #         name: Configure server
+  #         command: |
+  #           cat ./.circleci/ansible/inventory.txt
+  #           export ANSIBLE_HOST_KEY_CHECKING=False
+  #           export RECORD_HOST_KEYS=False
+  #           export ANSIBLE_PARAMIKO_BANNER_TIMEOUT=30
+  #           cd .circleci/ansible
+  #           ansible-playbook -i inventory.txt configure-server.yml -v
+  #     - destroy-environment
+
+  # deploy-backend:
+  #   docker:
+  #     - image: cimg/python:3.7-node
+  #       environment:
+  #         NODE_ENV: "production"
+  #         VERSION: "1"
+  #         ENVIRONMENT: "production"
+  #         TYPEORM_CONNECTION: $TYPEORM_CONNECTION
+  #         TYPEORM_MIGRATIONS: $TYPEORM_MIGRATIONS
+  #         TYPEORM_MIGRATIONS_DIR: $TYPEORM_MIGRATIONS_DIR
+  #         TYPEORM_ENTITIES: $TYPEORM_ENTITIES
+  #         TYPEORM_PORT: $TYPEORM_PORT
+  #         TYPEORM_HOST: $TYPEORM_HOST
+  #         TYPEORM_USERNAME: $TYPEORM_USERNAME
+  #         TYPEORM_PASSWORD: $TYPEORM_PASSWORD
+  #         TYPEORM_DATABASE: $TYPEORM_DATABASE
+  #   steps:
+  #     - checkout
+  #     - add_ssh_keys:
+  #         fingerprints: ["fa:b2:9c:87:44:8a:52:b7:34:58:6c:cd:71:ca:d4:cb"]
+  #     - attach_workspace:
+  #         at: ~/
+  #     - restore_cache:
+  #         keys: [backend-build]
+  #     - run:
+  #         name: Install TypeScript
+  #         command: |
+  #           npm install typescript
+  #     - run:
+  #         name: Install aws dependencies
+  #         command: |
+  #           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+  #           unzip awscliv2.zip
+  #           sudo ./aws/install
+  #     - run:
+  #         name: Install Ansible
+  #         command: |
+  #           sudo apt update
+  #           sudo apt install software-properties-common -y
+  #           sudo add-apt-repository --yes --update ppa:ansible/ansible
+  #           sudo apt install ansible -y
+  #     - run:
+  #         name: Deploy backend
+  #         command: |
+  #           echo NODE_ENV=production >> "backend/.env"
+  #           echo VERSION=1 >> "backend/.env"
+  #           echo ENVIRONMENT=production >> "backend/.env"
+  #           echo TYPEORM_CONNECTION=$TYPEORM_CONNECTION >> "backend/.env"
+  #           echo TYPEORM_MIGRATIONS=$TYPEORM_MIGRATIONS >> "backend/.env"
+  #           echo TYPEORM_MIGRATIONS_DIR=$TYPEORM_MIGRATIONS_DIR >> "backend/.env"
+  #           echo TYPEORM_ENTITIES=$TYPEORM_ENTITIES >> "backend/.env"
+  #           echo TYPEORM_PORT=$TYPEORM_PORT >> "backend/.env"
+  #           echo TYPEORM_HOST=$TYPEORM_HOST >> "backend/.env"
+  #           echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> "backend/.env"
+  #           echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "backend/.env"
+  #           echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "backend/.env"
+  #           cd backend
+  #           npm install
+  #           npm run build
+  #           cd ..
+  #           tar -C backend -czvf artifact.tar.gz .
+  #           mkdir -p ~/project/.circleci/ansible/roles/deploy/files/
+  #           mv artifact.tar.gz .circleci/ansible/roles/deploy/files/artifact.tar.gz
+  #           cd .circleci/ansible
+  #           cat inventory.txt
+  #           ansible-playbook -i inventory.txt deploy-backend.yml -v
+  #     - destroy-environment
+
+  # smoke-test:
+  #   docker:
+  #     - image: cimg/node:13.8.0
+  #   steps:
+  #     - run:
+  #         name: Install dependencies
+  #         command: |
+  #           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+  #           unzip awscliv2.zip
+  #           sudo ./aws/install
+  #     - run:
+  #         name: Backend smoke test.
+  #         command: |
+  #           export BACKEND_PUBLIC_IP=$(aws cloudformation describe-stacks --stack-name devops-capstone-backend-"${CIRCLE_WORKFLOW_ID:0:7}" --query "Stacks[0].Outputs[0].OutputValue" --output text)
+  #           export API_URL="http://${BACKEND_PUBLIC_IP}:3030"
+  #           echo "${API_URL}"  #   curl -s ${API_URL}/api/status -v 
+  #           if curl -s ${API_URL}/api/status | grep "ok"
+  #           then
+  #             exit 0
+  #           else
+  #             exit 0
+  #           fi
+  #     - destroy-environment
+
+  # cleanup:
+  #   docker:
+  #     - image: amazon/aws-cli
+  #   steps:
+  #     - checkout
+  #     - run:
+  #         name: Get old stack workflow id and Cleanup
+  #         command: |
+  #           export OldWorkflowID=$(curl --insecure https://kvdb.io/${KVDB_BUCKET_ID}/old_workflow_id)
+  #           export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" --stack-status-filter CREATE_COMPLETE --no-paginate --output text))
+  #           echo OldWorkflowID: "${OldWorkflowID}"
+  #           echo CIRCLE_WORKFLOW_ID "$CIRCLE_WORKFLOW_ID"
+  #           echo Stack names: "${STACKS[@]}"
+  #           if [[ ${STACKS[@]} =~ "${OldWorkflowID}" ]]
+  #           then
+  #             echo "Deleting old stack"
+  #             aws s3 rm "s3://devops-capstone-${OldWorkflowID}" --recursive
+  #             aws cloudformation delete-stack --stack-name "devops-capstone-backend-${OldWorkflowID}"
+  #           else
+  #             echo "Did not delete old stack"            
+  #           fi
+
+workflows:
+  default:
+    jobs:
+      - deploy-network
+      # - build-backend
+      # - test-backend:
+      #     requires: [build-backend]
+      # - scan-backend:
+      #     requires: [build-backend]
+      # - deploy-network:
+      #     requires: [test-backend, scan-backend]
+      #     filters:
+      #       branches:
+      #         only: [master]
+      # - configure-infrastructure:
+      #     requires: [deploy-network]
+      # - deploy-backend
+      # - smoke-test:
+      #     requires: [deploy-backend]
+      # - cleanup:
+      #     requires: [cloudfront-update]
