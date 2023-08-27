@@ -100,7 +100,7 @@ jobs:
           command: |
             aws cloudformation deploy \
               --template-file .circleci/network/network.yml \
-              --parameter-overrides $(jq -r '. | to_entries[] | "--" + .key + "=" + .value' .circleci/network/params.json) \
+              --parameter-overrides "$(jq -r '.[] | "--\(.ParameterKey)=\(.ParameterValue)"' .circleci/network/params.json)" \
               --tags project=devops-capstone-network \
               --stack-name "devops-capstone-network-${CIRCLE_WORKFLOW_ID:0:7}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
