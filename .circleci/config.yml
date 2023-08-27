@@ -87,6 +87,23 @@ jobs:
   #           npm audit fix --audit-level=critical --force
   #           npm update mkdirp --depth 2
   #           npm audit --audit-level=critical
+  build_and_push_docker:
+    docker:
+      - image: circleci/python:3.9
+    steps:
+      - checkout
+      # Build Docker image
+      - run:
+          name: Build Docker image
+          command: docker build -t udacity-devops-capstone:latest .
+      # Log in to Docker Hub
+      - run:
+          name: Log in to Docker Hub
+          command: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+      # Push Docker image to Docker Hub
+      - run:
+          name: Push Docker image
+          command: docker push udacity-devops-capstone:latest
 
   deploy-network:
     docker:
@@ -284,9 +301,10 @@ workflows:
     jobs:
       - deploy-network
       - deploy-server
+          requires: [build-network]
       # - build-backend
       # - test-backend:
-      #     requires: [build-backend]
+          # requires: [build-backend]
       # - scan-backend:
       #     requires: [build-backend]
       # - deploy-network:
