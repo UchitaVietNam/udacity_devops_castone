@@ -50,7 +50,7 @@ jobs:
       # Build Docker image
       - run:
           name: Build Docker image
-          command: docker build -t udacity-devops-capstone:latest .
+          command: docker build -t uchitavietnam/udacity-devops-capstone:latest .
       # Log in to Docker Hub
       - run:
           name: Log in to Docker Hub
