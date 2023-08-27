@@ -105,10 +105,6 @@ jobs:
               --tags project=devops-capstone-network \
               --stack-name "devops-capstone-network-${CIRCLE_WORKFLOW_ID:0:7}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - project/.circleci/ansible/inventory.txt
       - destroy-environment
 
   deploy-server:
@@ -128,10 +124,6 @@ jobs:
               --tags project=devops-capstone-server \
               --stack-name "devops-capstone-server-${CIRCLE_WORKFLOW_ID:0:7}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - project/.circleci/ansible/inventory.txt
       - destroy-environment
   # configure-infrastructure:
   #   docker:
@@ -291,6 +283,7 @@ workflows:
   default:
     jobs:
       - deploy-network
+      - deploy-server
       # - build-backend
       # - test-backend:
       #     requires: [build-backend]
