@@ -67,35 +67,8 @@ Resources:
                     # Pull the Docker image from Docker Hub
                     docker pull uchitavietnam/udacity-devops-capstone:latest
                     # Install Kubernetes tools
-                    sudo apt-get update -y
-                    sudo apt-get install -y apt-transport-https curl
-                    curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-                    echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
-                    sudo apt-get update -y
-                    sudo apt-get install -y kubectl kubeadm kubelet
-                    # Run Kubernetes commands to deploy your app
-                    # Create a Kubernetes Deployment for your application
-                    cat <<EOF | kubectl apply -f -
-                    apiVersion: apps/v1
-                    kind: Deployment
-                    metadata:
-                    name: udacity-devops-capstone
-                    spec:
-                    replicas: 1
-                    selector:
-                        matchLabels:
-                        app: udacity-devops-capstone
-                    template:
-                        metadata:
-                        labels:
-                            app: udacity-devops-capstone
-                        spec:
-                        containers:
-                        - name: udacity-devops-capstone
-                            image: uchitavietnam/udacity-devops-capstone:latest
-                            ports:
-                            - containerPort: 80
-                    EOF
+                    # Run the Docker container on port 80
+                    docker run -d -p 80:80 uchitavietnam/udacity-devops-capstone:latest
             ImageId: ami-053b0d53c279acc90
             KeyName: vufpt_keypair
             # IamInstanceProfile: !Ref ProfileWithRolesForOurApp
