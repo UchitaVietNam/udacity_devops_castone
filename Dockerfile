@@ -1,6 +1,8 @@
 # Use a specific version of Ubuntu as the base
 FROM ubuntu:20.04
 
+ENV TZ=Asia/Tokyo
+
 # Update package sources and install Apache
 RUN apt-get update && \
     apt-get install -y --no-install-recommends apache2=2.4.41-4ubuntu3.14 && \
