@@ -41,53 +41,7 @@ commands:
             aws cloudformation delete-stack --stack-name devops-capstone-server-<< parameters.Workflow_ID >>
 
 jobs:
-  # build-backend:
-  #   docker:
-  #     - image: circleci/node:13.8.0
-  #   steps:
-  #     - checkout
-  #     - restore_cache:
-  #         keys: [backend-build]
-  #     - run:
-  #         name: Back-end build
-  #         command: |
-  #           cd backend
-  #           npm install
-  #           npm run build
-  #     - save_cache:
-  #         paths: [backend/node_modules]
-  #         key: backend-build
-
-  # test-backend:
-  #   docker:
-  #     - image: circleci/node:13.8.0
-  #   steps:
-  #     - checkout
-  #     - restore_cache:
-  #         keys: [backend-build]
-  #     - run:
-  #         name: Test back-end
-  #         command: |
-  #           cd backend
-  #           npm i
-  #           npm run test
-
-  # scan-backend:
-  #   docker:
-  #     - image: circleci/node:13.8.0
-  #   steps:
-  #     - checkout
-  #     - restore_cache:
-  #         keys: [backend-build]
-  #     - run:
-  #         name: Scan back-end
-  #         command: |
-  #           cd backend
-  #           npm install
-  #           npm audit fix --audit-level=critical --force
-  #           npm update mkdirp --depth 2
-  #           npm audit --audit-level=critical
-  build_and_push_docker:
+  build-docker:
     docker:
       - image: circleci/python:3.9
     steps:
@@ -299,9 +253,9 @@ jobs:
 workflows:
   default:
     jobs:
-      - build_and_push_docker
+      - build-docker
       - deploy-network
-          requires: [build_and_push_docker]
+          requires: [build-docker]
       - deploy-server
           requires: [deploy-network]
       # - build-backend
