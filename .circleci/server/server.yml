@@ -74,7 +74,28 @@ Resources:
                     sudo apt-get update -y
                     sudo apt-get install -y kubectl kubeadm kubelet
                     # Run Kubernetes commands to deploy your app
-                    kubectl run udacity-devops-capstone --image=uchitavietnam/udacity-devops-capstone:latest --port=80
+                    # Create a Kubernetes Deployment for your application
+                    cat <<EOF | kubectl apply -f -
+                    apiVersion: apps/v1
+                    kind: Deployment
+                    metadata:
+                    name: udacity-devops-capstone
+                    spec:
+                    replicas: 1
+                    selector:
+                        matchLabels:
+                        app: udacity-devops-capstone
+                    template:
+                        metadata:
+                        labels:
+                            app: udacity-devops-capstone
+                        spec:
+                        containers:
+                        - name: udacity-devops-capstone
+                            image: uchitavietnam/udacity-devops-capstone:latest
+                            ports:
+                            - containerPort: 80
+                    EOF
             ImageId: ami-053b0d53c279acc90
             KeyName: vufpt_keypair
             # IamInstanceProfile: !Ref ProfileWithRolesForOurApp
