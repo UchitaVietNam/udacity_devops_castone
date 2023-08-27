@@ -6,6 +6,7 @@ Parameters:
     EnvironmentName:
         Description: An environment name that will be prefixed to resources
         Type: String
+        Default: dev
 
     VpcCIDR:
         Description: Please enter the IP range (CIDR notation) for this

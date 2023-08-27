@@ -6,11 +6,13 @@ Parameters:
     EnvironmentName:
         Description: An environment name that will be prefixed to resources
         Type: String
+        Default: dev
 
     InstanceType:
         Description: "The EC2 instance type of general purpose"
         Type: String
         AllowedValues: [t2.medium, t3.small]
+        Default: t3.small
 
 # <-------------RESOURCES------------->
 Resources:

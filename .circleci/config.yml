@@ -36,7 +36,9 @@ commands:
           command: |
             echo "Destroying environment: << parameters.Workflow_ID >> "
             aws s3 rm s3://devops-capstone-network-<<parameters.Workflow_ID>> --recursive
-            aws cloudformation delete-stack --stack-name devops-capstone-backend-<< parameters.Workflow_ID >>
+            aws s3 rm s3://devops-capstone-server-<<parameters.Workflow_ID>> --recursive
+            aws cloudformation delete-stack --stack-name devops-capstone-network-<< parameters.Workflow_ID >>
+            aws cloudformation delete-stack --stack-name devops-capstone-server-<< parameters.Workflow_ID >>
 
 jobs:
   # build-backend:
@@ -94,28 +96,43 @@ jobs:
       - run:
           name: Install tar and zip utilities
           command: |
-            yum -y install tar gzip jq
+            yum -y install tar gzip
       - run:
           name: Ensure network infrastructure exists
           command: |
             aws cloudformation deploy \
               --template-file .circleci/network/network.yml \
-              --parameter-overrides "$(jq -r '.[] | "--\(.ParameterKey)=\(.ParameterValue)"' .circleci/network/params.json)" \
               --tags project=devops-capstone-network \
               --stack-name "devops-capstone-network-${CIRCLE_WORKFLOW_ID:0:7}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
-      # - run:
-      #     name: Add back-end ip to ansible inventory
-      #     command: |
-      #       BACKEND_PUBLIC_IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" --query 'Reservations[*].Instances[*].PublicDnsName' --output text)
-      #       echo $BACKEND_PUBLIC_IP >> .circleci/ansible/inventory.txt
-      #       cat .circleci/ansible/inventory.txt
       - persist_to_workspace:
           root: ~/
           paths:
             - project/.circleci/ansible/inventory.txt
       - destroy-environment
 
+  deploy-server:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Install tar and zip utilities
+          command: |
+            yum -y install tar gzip
+      - run:
+          name: Ensure server infrastructure exists
+          command: |
+            aws cloudformation deploy \
+              --template-file .circleci/server/server.yml \
+              --tags project=devops-capstone-server \
+              --stack-name "devops-capstone-server-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - project/.circleci/ansible/inventory.txt
+      - destroy-environment
   # configure-infrastructure:
   #   docker:
   #     - image: python:3.7-alpine3.11
