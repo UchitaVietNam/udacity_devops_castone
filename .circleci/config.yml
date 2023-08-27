@@ -58,7 +58,7 @@ jobs:
       # Push Docker image to Docker Hub
       - run:
           name: Push Docker image
-          command: docker push udacity-devops-capstone:latest
+          command: docker push uchitavietnam/udacity-devops-capstone:latest
 
   deploy-network:
     docker:
