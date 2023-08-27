@@ -43,9 +43,10 @@ commands:
 jobs:
   build-docker:
     docker:
-      - image: docker:stable
+      - image: circleci/python:3.9
     steps:
       - checkout
+      - setup_remote_docker
       # Build Docker image
       - run:
           name: Build Docker image
