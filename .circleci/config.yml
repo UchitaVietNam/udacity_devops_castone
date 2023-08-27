@@ -41,7 +41,7 @@ jobs:
           name: run lint
           command: |
             . venv/bin/activate 
-            make lint
+            hadolint Dockerfile
       - setup_remote_docker
       # Build Docker image
       - run:
