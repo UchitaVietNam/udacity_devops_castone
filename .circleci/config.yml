@@ -36,22 +36,18 @@ jobs:
             # Install hadolint
             sudo wget -O /bin/hadolint https://github.com/hadolint/hadolint/releases/download/v1.16.3/hadolint-Linux-x86_64
             sudo chmod +x /bin/hadolint
-      # run lint!
       - run:
           name: run lint
           command: |
             . venv/bin/activate 
-            hadolint Dockerfile
+            make lint
       - setup_remote_docker
-      # Build Docker image
       - run:
           name: Build Docker image
           command: docker build -t uchitavietnam/udacity-devops-capstone:latest .
-      # Log in to Docker Hub
       - run:
           name: Log in to Docker Hub
           command: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-      # Push Docker image to Docker Hub
       - run:
           name: Push Docker image
           command: docker push uchitavietnam/udacity-devops-capstone:latest
