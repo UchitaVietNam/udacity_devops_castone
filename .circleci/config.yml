@@ -254,9 +254,9 @@ workflows:
   default:
     jobs:
       - build-docker
-      - deploy-network
+      - deploy-network:
           requires: [build-docker]
-      - deploy-server
+      - deploy-server:
           requires: [deploy-network]
       # - build-backend
       # - test-backend:
