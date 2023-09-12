@@ -2,6 +2,8 @@ version: 2.1
 
 orbs:
   aws-cli: circleci/aws-cli@3.1.1
+  kubernetes: circleci/kubernetes@1.0.2
+  aws-eks: circleci/aws-eks@1.1
 
 commands:
   destroy-environment:
@@ -16,8 +18,6 @@ commands:
           when: on_fail
           command: |
             echo "Destroying environment: << parameters.Workflow_ID >> "
-            aws s3 rm s3://devops-capstone-network-<<parameters.Workflow_ID>> --recursive
-            aws s3 rm s3://devops-capstone-server-<<parameters.Workflow_ID>> --recursive
             aws cloudformation delete-stack --stack-name devops-capstone-network-<< parameters.Workflow_ID >>
             aws cloudformation delete-stack --stack-name devops-capstone-server-<< parameters.Workflow_ID >>
 
@@ -51,6 +51,43 @@ jobs:
       - run:
           name: Push Docker image
           command: docker push uchitavietnam/udacity-devops-capstone:latest
+
+  deploy-to-eks:
+    description: Deploy Docker image to EKS
+    steps:
+      - aws-eks/update-kubeconfig:
+          cluster-name: udacity-devops-capstone-cluster
+          install-kubectl: true
+          region: us-east-1
+      - run:
+          name: Configure kubectl for EKS cluster
+          command: |
+            # Set the kubeconfig context for your EKS cluster
+            kubectl config use-context udacity-devops-capstone-cluster
+            # Authenticate to the cluster (this may vary depending on your cluster setup)
+            # Example using AWS IAM Authenticator:
+            aws eks update-kubeconfig --region us-east-1 --name udacity-devops-capstone-cluster
+            # Verify the context and credentials
+            kubectl config view
+      - run:
+          name: Deploy to EC2 instances
+          command: |
+            # Use kubectl to apply your Kubernetes manifest files to the EC2 instances
+            kubectl apply -f your-deployment-manifest.yaml
+            kubectl apply -f your-service-manifest.yaml
+      # - kubernetes/create-or-update-resource:
+      #     resource-file-path: .circleci/deployment.yml
+      #     resource-name: my-app-deployment
+      #     resource-type: deployment
+      #     namespace: default
+      #     wait: true
+      #     kubectl-version: "1.18.18"
+      # - kubernetes/apply:
+      #     resource-file-path: .circleci/k8s-service.yml
+      #     resource-name: my-app-service
+      #     namespace: default
+      #     wait: true
+      #     kubectl-version: "1.18.18"
 
   deploy-network:
     docker:
@@ -94,7 +131,8 @@ workflows:
   default:
     jobs:
       - build-docker
-      - deploy-network:
-          requires: [build-docker]
-      - deploy-server:
-          requires: [deploy-network]
+      - deploy-to-eks
+      # - deploy-network:
+      #     requires: [build-docker]
+      # - deploy-server:
+      #     requires: [deploy-network]
