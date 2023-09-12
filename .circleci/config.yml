@@ -54,6 +54,7 @@ jobs:
 
   deploy-to-eks:
     description: Deploy Docker image to EKS
+    executor: aws-eks
     steps:
       - aws-eks/update-kubeconfig:
           cluster-name: udacity-devops-capstone-cluster
