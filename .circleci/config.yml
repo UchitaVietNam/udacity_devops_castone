@@ -63,10 +63,10 @@ jobs:
             unzip awscliv2.zip
             sudo ./aws/install
             aws --version
-      - aws eks update-kubeconfig:
-          cluster-name: udacity-devops-capstone-cluster
-          install-kubectl: true
-          region: us-east-1
+      # - aws eks update-kubeconfig:
+      #     cluster-name: udacity-devops-capstone-cluster
+      #     install-kubectl: true
+      #     region: us-east-1
       - run:
           name: Configure kubectl for EKS cluster
           command: |
