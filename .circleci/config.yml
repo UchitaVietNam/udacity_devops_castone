@@ -92,9 +92,14 @@ jobs:
               envsubst < $f > "app/.k8s/.generated/$(basename $f)"
             done
       - run:
+          name: Debugging
+          command: |
+            ls -l app/.k8s/.generated/
+            cat app/.k8s/.generated/deployment.yaml
+      - run:
           name: Apply
           command: |
-            sudo kubectl apply -f app/.k8s/.generated/deployment.yaml
+            sudo kubectl apply -f app/.k8s/.generated/
       - run:
           name: Get pod
           command: |
