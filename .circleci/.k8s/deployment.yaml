@@ -15,7 +15,7 @@ spec:
       containers:
       - name: devops-capstone
         image: uchitavietnam/udacity-devops-capstone:latest
-        imagePullPolicy: Always
+        imagePullPolicy: Never
         ports:
         - containerPort: 8080
   strategy:
