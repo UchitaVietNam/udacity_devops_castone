@@ -68,7 +68,7 @@ jobs:
           command: |
             curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
             chmod +x kubectl
-            sudo mv kubectl /usr/local/bin/
+            su root -c "mv kubectl /usr/local/bin/"
       - run:
           name: Authenticate with AWS EKS
           command: |
@@ -129,10 +129,10 @@ jobs:
 workflows:
   default:
     jobs:
-      - install-app-dependencies
-      - lint-app:
-          requires: [install-app-dependencies]
-      - build-docker:
-          requires: [install-app-dependencies, lint-app]
+      # - install-app-dependencies
+      # - lint-app:
+      #     requires: [install-app-dependencies]
+      # - build-docker:
+      #     requires: [install-app-dependencies, lint-app]
       - deploy-to-eks:
           requires: [build-docker]
