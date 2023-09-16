@@ -103,7 +103,7 @@ workflows:
       - install-app-dependencies
       - lint-app:
           requires: [install-app-dependencies]
-      - build-docker
+      - build-docker:
           requires: [install-app-dependencies, lint-app]
       - deploy-to-eks:
           requires: [build-docker]
