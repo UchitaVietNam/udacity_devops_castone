@@ -30,6 +30,6 @@ metadata:
 spec:
   ports:
   - port: 8080
-    targetPort: 8080
+    targetPort: 8083
   selector:
     app: devops-capstone
