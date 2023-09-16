@@ -113,9 +113,6 @@ jobs:
             aws configure list
             kubectl config view
             kubectl apply -f app/.k8s/.generated/ -v=6
-      - run:
-          name: Get pod
-          command: |
             kubectl get pod
 
 workflows:
