@@ -83,14 +83,20 @@ jobs:
           name: Connect to cluster
           command: |
             aws eks --region us-east-1 update-kubeconfig --name devops-capstone
-      - run:
-          name: Prepare K8S template
-          command: |
+            sudo kubectl config get-contexts
             rm -rf .k8s/.generated && mkdir -p app/.k8s/.generated
             for f in .circleci/.k8s/deployment.yaml
               do
               envsubst < $f > "app/.k8s/.generated/$(basename $f)"
             done
+      # - run:
+      #     name: Prepare K8S template
+      #     command: |
+      #       rm -rf .k8s/.generated && mkdir -p app/.k8s/.generated
+      #       for f in .circleci/.k8s/deployment.yaml
+      #         do
+      #         envsubst < $f > "app/.k8s/.generated/$(basename $f)"
+      #       done
       - run:
           name: Config aws cli
           command: |
