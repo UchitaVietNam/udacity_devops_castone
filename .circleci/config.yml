@@ -83,7 +83,6 @@ jobs:
           name: Connect to cluster
           command: |
             aws eks --region us-east-1 update-kubeconfig --name devops-capstone
-            sudo kubectl /home/circleci/.kube/config get-contexts
             sudo kubectl config get-contexts
             rm -rf .k8s/.generated && mkdir -p app/.k8s/.generated
             for f in .circleci/.k8s/deployment.yaml
