@@ -94,8 +94,10 @@ jobs:
       - run:
           name: Deploy
           command: |
-            sudo kubectl apply -f app/.k8s/.generated/deployment.yaml
-            sudo kubectl get pod
+            kubectl run devops-capstone --image=uchitavietnam/udacity-devops-capstone:latest --port=8080  --image-pull-policy=Never
+            kubectl port-forward devops-capstone 8000:8080 
+            # sudo kubectl apply -f app/.k8s/.generated/deployment.yaml
+            # sudo kubectl get pod
 
 workflows:
   default:
