@@ -95,11 +95,10 @@ jobs:
           name: Debugging
           command: |
             kubectl config view
-            kubectl config current-context
       - run:
           name: Apply
           command: |
-            sudo kubectl apply -f app/.k8s/.generated/
+            sudo kubectl apply -f app/.k8s/.generated/deployment.yaml --verbose
       - run:
           name: Get pod
           command: |
