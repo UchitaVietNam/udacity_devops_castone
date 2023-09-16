@@ -1,19 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: my-app-deployment
+  name: devops-capstone
 spec:
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
-      app: my-app
+      app: devops-capstone
   template:
     metadata:
       labels:
-        app: my-app
+        app: devops-capstone
     spec:
       containers:
-        - name: my-app-container
-          image: uchitavietnam/udacity-devops-capstone:latest
-          ports:
-            - containerPort: 80
+      - name: devops-capstone
+        image: uchitavietnam/udacity-devops-capstone:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 50%

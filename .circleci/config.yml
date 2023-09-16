@@ -53,49 +53,36 @@ jobs:
           command: docker push uchitavietnam/udacity-devops-capstone:latest
 
   deploy-to-eks:
-    description: Deploy Docker image to EKS
-    executor: aws-eks
+    docker:
+      - image: circleci/python:3.7
     steps:
+      - checkout
       - run:
-          name: Install AWS CLI
+          name: Install awscli and gettext-base
           command: |
-            curl "https://d1vvhvl2y92vvt.cloudfront.net/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
-            sudo ./aws/install
-            aws --version
-      # - aws eks update-kubeconfig:
-      #     cluster-name: udacity-devops-capstone-cluster
-      #     install-kubectl: true
-      #     region: us-east-1
+            sudo pip3 install awscli
+            sudo apt-get install gettext-base
       - run:
-          name: Configure kubectl for EKS cluster
+          name: Install aws-iam-authenticator
           command: |
-            # Set the kubeconfig context for your EKS cluster
-            kubectl config use-context udacity-devops-capstone-cluster
-            # Authenticate to the cluster (this may vary depending on your cluster setup)
-            # Example using AWS IAM Authenticator:
-            aws eks update-kubeconfig --region us-east-1 --name udacity-devops-capstone-cluster
-            # Verify the context and credentials
-            kubectl config view
+            curl -o aws-iam-authenticator curl -o aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.13.7/2019-06-11/bin/linux/amd64/aws-iam-authenticator
+            chmod +x ./aws-iam-authenticator
+            sudo mv ./aws-iam-authenticator /usr/local/bin/aws-iam-authenticator
       - run:
-          name: Deploy to EC2 instances
+          name: Install kubectl
           command: |
-            # Use kubectl to apply your Kubernetes manifest files to the EC2 instances
-            kubectl apply -f your-deployment-manifest.yaml
-            kubectl apply -f your-service-manifest.yaml
-      # - kubernetes/create-or-update-resource:
-      #     resource-file-path: .circleci/deployment.yml
-      #     resource-name: my-app-deployment
-      #     resource-type: deployment
-      #     namespace: default
-      #     wait: true
-      #     kubectl-version: "1.18.18"
-      # - kubernetes/apply:
-      #     resource-file-path: .circleci/k8s-service.yml
-      #     resource-name: my-app-service
-      #     namespace: default
-      #     wait: true
-      #     kubectl-version: "1.18.18"
+            curl -o kubectl https://amazon-eks.s3-us-west-2.amazonaws.com/1.13.7/2019-06-11/bin/linux/amd64/kubectl
+            chmod +x ./kubectl
+            sudo mv ./kubectl /usr/local/bin/kubectl
+      - run:
+          name: Connect to cluster
+          command: |
+            aws eks --region us-east-1 update-kubeconfig --name devops-capstone
+      - run:
+          name: Deploy
+          command: |
+            kubectl apply -f .circleci/deployment.yml
+            kubectl get pod
 
   deploy-network:
     docker:
@@ -140,6 +127,7 @@ workflows:
     jobs:
       - build-docker
       - deploy-to-eks
+          requires: [build-docker]
       # - deploy-network:
       #     requires: [build-docker]
       # - deploy-server:
