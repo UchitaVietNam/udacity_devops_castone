@@ -79,6 +79,14 @@ jobs:
           command: |
             aws eks --region us-east-1 update-kubeconfig --name devops-capstone
       - run:
+          name: Prepare K8S template
+          command: |
+            rm -rf .k8s/.generated && mkdir -p .circleci/.k8s/.generated
+            for f in .circleci/.k8s/deployment.yaml
+              do
+              envsubst < $f > ".circleci/.k8s/.generated/$(basename $f)"
+            done
+      - run:
           name: Deploy
           command: |
             kubectl apply -f .circleci/deployment.yml
