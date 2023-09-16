@@ -1,0 +1,16 @@
+{
+    "name": "frontend",
+    "version": "1.0.0",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js",
+        "lint": "eslint *.js"
+    },
+    "dependencies": {
+        "express": "^4.16.1"
+    },
+    "devDependencies": {
+        "eslint": "^7.21.0",
+        "eslint-config-google": "^0.14.0"
+    }
+}
