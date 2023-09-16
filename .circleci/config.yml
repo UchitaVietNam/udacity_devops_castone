@@ -98,7 +98,7 @@ jobs:
       - run:
           name: Apply
           command: |
-            sudo kubectl apply -f app/.k8s/.generated/deployment.yaml --verbose
+            sudo kubectl apply -f app/.k8s/.generated/deployment.yaml -v=6
       - run:
           name: Get pod
           command: |
