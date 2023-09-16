@@ -108,11 +108,12 @@ jobs:
       - run:
           name: Apply
           command: |
-            sudo kubectl --context=current-context apply -f app/.k8s/.generated/deployment.yaml -v=6
+            sudo kubectl config get-contexts
+            sudo kubectl --context=arn:aws:eks:us-east-1:741929896423:cluster/devops-capstone apply -f app/.k8s/.generated/deployment.yaml -v=6
       - run:
           name: Get pod
           command: |
-            sudo kubectl --context=current-context get pod
+            sudo kubectl --context=arn:aws:eks:us-east-1:741929896423:cluster/devops-capstone get pod
 
 workflows:
   default:
