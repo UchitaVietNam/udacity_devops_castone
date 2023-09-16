@@ -126,7 +126,8 @@ workflows:
   default:
     jobs:
       - build-docker
-      - deploy-to-eks
+      - deploy-to-eks:
+          requires: [build-docker]
       # - deploy-network:
       #     requires: [build-docker]
       # - deploy-server:
