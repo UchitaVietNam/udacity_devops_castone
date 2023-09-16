@@ -63,24 +63,24 @@ jobs:
           name: Connect to cluster
           command: |
             aws eks --region us-east-1 update-kubeconfig --name devops-capstone
-      - run:
-          name: Prepare K8S template
-          command: |
-            rm -rf .k8s/.generated && mkdir -p deployment/.k8s/.generated
-            for f in .circleci/.k8s/deployment.yaml
-              do
-              envsubst < $f > "deployment/.k8s/.generated/$(basename $f)"
-            done
-      - run:
-          name: Debugging
-          command: |
-            kubectl config view
-            kubectl config current-context
-            aws iam list-attached-user-policies --user-name udacity-devops-capstone
+      # - run:
+      #     name: Prepare K8S template
+      #     command: |
+      #       rm -rf .k8s/.generated && mkdir -p deployment/.k8s/.generated
+      #       for f in .circleci/.k8s/deployment.yaml
+      #         do
+      #         envsubst < $f > "deployment/.k8s/.generated/$(basename $f)"
+      #       done
+      # - run:
+      #     name: Debugging
+      #     command: |
+      #       kubectl config view
+      #       kubectl config current-context
+      #       aws iam list-attached-user-policies --user-name udacity-devops-capstone
       - run:
           name: Deploy
           command: |
-            sudo kubectl apply -f deployment/.k8s/.generated/
+            sudo kubectl apply -f .circleci/.k8s/deployment.yaml
             sudo kubectl get pod
 
 workflows:
