@@ -94,8 +94,8 @@ jobs:
       - run:
           name: Debugging
           command: |
-            ls -l app/.k8s/.generated/
-            cat app/.k8s/.generated/deployment.yaml
+            kubectl config view
+            kubectl config current-context
       - run:
           name: Apply
           command: |
