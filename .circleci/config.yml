@@ -62,8 +62,7 @@ jobs:
       - image: amazon/aws-cli
     steps:
       - checkout
-      - setup_remote_docker:
-          version: 20.10.8 # Use a compatible Docker version
+      - setup_remote_docker
       - run:
           name: Install kubectl
           command: |
