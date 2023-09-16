@@ -110,12 +110,13 @@ jobs:
       - run:
           name: Apply
           command: |
+            aws configure list
             kubectl config view
-            sudo kubectl apply -f app/.k8s/.generated/ -v=6
+            kubectl apply -f app/.k8s/.generated/ -v=6
       - run:
           name: Get pod
           command: |
-            sudo kubectl get pod
+            kubectl get pod
 
 workflows:
   default:
