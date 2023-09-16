@@ -102,7 +102,7 @@ workflows:
     jobs:
       - install-app-dependencies
       - lint-app:
-        requires: [install-app-dependencies]
+          requires: [install-app-dependencies]
       - build-docker
       - deploy-to-eks:
           requires: [build-docker]
