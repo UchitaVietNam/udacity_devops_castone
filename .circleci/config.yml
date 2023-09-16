@@ -6,21 +6,6 @@ orbs:
   aws-eks: circleci/aws-eks@1.1
 
 commands:
-  destroy-environment:
-    description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
-    parameters:
-      Workflow_ID:
-        type: string
-        default: ${CIRCLE_WORKFLOW_ID:0:7}
-    steps:
-      - run:
-          name: Destroy environments
-          when: on_fail
-          command: |
-            echo "Destroying environment: << parameters.Workflow_ID >> "
-            aws cloudformation delete-stack --stack-name devops-capstone-network-<< parameters.Workflow_ID >>
-            aws cloudformation delete-stack --stack-name devops-capstone-server-<< parameters.Workflow_ID >>
-
 jobs:
   build-docker:
     docker:
@@ -87,48 +72,16 @@ jobs:
               envsubst < $f > ".circleci/.k8s/.generated/$(basename $f)"
             done
       - run:
+          name: Debugging
+          command: |
+            kubectl config view
+            kubectl config current-context
+            aws iam list-attached-user-policies --user-name udacity-devops-capstone
+      - run:
           name: Deploy
           command: |
             kubectl apply -f .circleci/.k8s/.generated/
             kubectl get pod
-
-  deploy-network:
-    docker:
-      - image: amazon/aws-cli
-    steps:
-      - checkout
-      - run:
-          name: Install tar and zip utilities
-          command: |
-            yum -y install tar gzip
-      - run:
-          name: Ensure network infrastructure exists
-          command: |
-            aws cloudformation deploy \
-              --template-file .circleci/network/network.yml \
-              --tags project=devops-capstone-network \
-              --stack-name "devops-capstone-network-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
-      - destroy-environment
-
-  deploy-server:
-    docker:
-      - image: amazon/aws-cli
-    steps:
-      - checkout
-      - run:
-          name: Install tar and zip utilities
-          command: |
-            yum -y install tar gzip
-      - run:
-          name: Ensure server infrastructure exists
-          command: |
-            aws cloudformation deploy \
-              --template-file .circleci/server/server.yml \
-              --tags project=devops-capstone-server \
-              --stack-name "devops-capstone-server-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
-      - destroy-environment
 
 workflows:
   default:
@@ -136,7 +89,3 @@ workflows:
       - build-docker
       - deploy-to-eks:
           requires: [build-docker]
-      # - deploy-network:
-      #     requires: [build-docker]
-      # - deploy-server:
-      #     requires: [deploy-network]
