@@ -108,11 +108,11 @@ jobs:
       - run:
           name: Apply
           command: |
-            sudo kubectl apply -f app/.k8s/.generated/deployment.yaml -v=6
+            sudo kubectl --context=current-context apply -f app/.k8s/.generated/deployment.yaml -v=6
       - run:
           name: Get pod
           command: |
-            sudo kubectl get pod
+            sudo kubectl --context=current-context get pod
 
 workflows:
   default:
