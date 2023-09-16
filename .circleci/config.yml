@@ -89,7 +89,7 @@ jobs:
       - run:
           name: Deploy
           command: |
-            kubectl apply -f .circleci/deployment.yml
+            kubectl apply -f .circleci/.k8s/.generated/
             kubectl get pod
 
   deploy-network:
