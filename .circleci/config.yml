@@ -83,12 +83,19 @@ jobs:
           name: Connect to cluster
           command: |
             aws eks --region us-east-1 update-kubeconfig --name devops-capstone
+            kubectl --kubeconfig /home/circleci/.kube/config get-contexts
             sudo kubectl config get-contexts
             rm -rf .k8s/.generated && mkdir -p app/.k8s/.generated
             for f in .circleci/.k8s/deployment.yaml
               do
               envsubst < $f > "app/.k8s/.generated/$(basename $f)"
             done
+            aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+            aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+            aws configure set aws_session_token $AWS_SESSION_TOKEN
+            aws configure set region $AWS_DEFAULT_REGION
+            sudo kubectl --context=arn:aws:eks:us-east-1:741929896423:cluster/devops-capstone apply -f app/.k8s/.generated/deployment.yaml -v=6
+            sudo kubectl --context=arn:aws:eks:us-east-1:741929896423:cluster/devops-capstone get pod
       # - run:
       #     name: Prepare K8S template
       #     command: |
@@ -97,25 +104,25 @@ jobs:
       #         do
       #         envsubst < $f > "app/.k8s/.generated/$(basename $f)"
       #       done
-      - run:
-          name: Config aws cli
-          command: |
-            aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
-            aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
-            aws configure set aws_session_token $AWS_SESSION_TOKEN
-            aws configure set region $AWS_DEFAULT_REGION
-      - run:
-          name: Debug Kubeconfig and AWS Credentials
-          command: |
-            echo "Kubeconfig contents:"
-            cat $KUBECONFIG
-            echo "AWS credentials:"
-            cat ~/.aws/credentials
-      - run:
-          name: Apply
-          command: |
-            sudo kubectl config get-contexts
-            # sudo kubectl --context=arn:aws:eks:us-east-1:741929896423:cluster/devops-capstone apply -f app/.k8s/.generated/deployment.yaml -v=6
+      # - run:
+      #     name: Config aws cli
+      #     command: |
+      #       aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+      #       aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+      #       aws configure set aws_session_token $AWS_SESSION_TOKEN
+      #       aws configure set region $AWS_DEFAULT_REGION
+      # - run:
+      #     name: Debug Kubeconfig and AWS Credentials
+      #     command: |
+      #       echo "Kubeconfig contents:"
+      #       cat $KUBECONFIG
+      #       echo "AWS credentials:"
+      #       cat ~/.aws/credentials
+      # - run:
+      #     name: Apply
+      #     command: |
+      #       sudo kubectl config get-contexts
+      #       # sudo kubectl --context=arn:aws:eks:us-east-1:741929896423:cluster/devops-capstone apply -f app/.k8s/.generated/deployment.yaml -v=6
       # - run:
       #     name: Get pod
       #     command: |
