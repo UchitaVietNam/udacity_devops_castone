@@ -66,10 +66,10 @@ jobs:
       - run:
           name: Prepare K8S template
           command: |
-            rm -rf .k8s/.generated && mkdir -p .circleci/.k8s/.generated
+            rm -rf .k8s/.generated && mkdir -p deployment/.k8s/.generated
             for f in .circleci/.k8s/deployment.yaml
               do
-              envsubst < $f > ".circleci/.k8s/.generated/$(basename $f)"
+              envsubst < $f > "deployment/.k8s/.generated/$(basename $f)"
             done
       - run:
           name: Debugging
@@ -80,8 +80,8 @@ jobs:
       - run:
           name: Deploy
           command: |
-            kubectl apply -f .circleci/.k8s/.generated/
-            kubectl get pod
+            sudo kubectl apply -f deployment/.k8s/.generated/
+            sudo kubectl get pod
 
 workflows:
   default:
