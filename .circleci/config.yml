@@ -67,60 +67,54 @@ jobs:
           command: |
             sudo pip3 install awscli
             sudo apt-get install gettext-base
-      # - run:
-      #     name: Install aws-iam-authenticator
-      #     command: |
-      #       curl -o aws-iam-authenticator curl -o aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.13.7/2019-06-11/bin/linux/amd64/aws-iam-authenticator
-      #       chmod +x ./aws-iam-authenticator
-      #       sudo mv ./aws-iam-authenticator /usr/local/bin/aws-iam-authenticator
+      - run:
+          name: Install aws-iam-authenticator
+          command: |
+            curl -o aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.21.2/2021-07-05/bin/linux/amd64/aws-iam-authenticator 
+            chmod +x ./aws-iam-authenticator
+            mkdir -p $HOME/bin && cp ./aws-iam-authenticator $HOME/bin/aws-iam-authenticator && export PATH=$PATH:$HOME/bin
+            echo 'export PATH=$PATH:$HOME/bin' >> ~/.bashrc
       - run:
           name: Install kubectl
           command: |
-            curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-            chmod +x kubectl
-            sudo mv kubectl /usr/local/bin/
+            curl -o kubectl https://amazon-eks.s3-us-west-2.amazonaws.com/1.13.7/2019-06-11/bin/linux/amd64/kubectl
+            chmod +x ./kubectl
+            sudo mv ./kubectl /usr/local/bin/kubectl
       - run:
           name: Connect to cluster
           command: |
+            kubectl config view
             aws eks --region us-east-1 update-kubeconfig --name devops-capstone
-            sudo kubectl config get-contexts
+      - run:
+          name: Prepare K8S template
+          command: |
+            rm -rf .k8s/.generated && mkdir -p app/.k8s/.generated
+            for f in .circleci/.k8s/deployment.yaml
+              do
+              envsubst < $f > "app/.k8s/.generated/$(basename $f)"
+            done
+      - run:
+          name: Config aws cli
+          command: |
             aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
             aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
             aws configure set aws_session_token $AWS_SESSION_TOKEN
             aws configure set region $AWS_DEFAULT_REGION
-            sudo kubectl apply -f .circleci/.k8s/deployment.yaml -v=6
+      - run:
+          name: Debug Kubeconfig and AWS Credentials
+          command: |
+            echo "Kubeconfig contents:"
+            cat $KUBECONFIG
+            echo "AWS credentials:"
+            cat ~/.aws/credentials
+      - run:
+          name: Apply
+          command: |
+            sudo kubectl apply -f app/.k8s/.generated/ -v=6
+      - run:
+          name: Get pod
+          command: |
             sudo kubectl get pod
-      # - run:
-      #     name: Prepare K8S template
-      #     command: |
-      #       rm -rf .k8s/.generated && mkdir -p app/.k8s/.generated
-      #       for f in .circleci/.k8s/deployment.yaml
-      #         do
-      #         envsubst < $f > "app/.k8s/.generated/$(basename $f)"
-      #       done
-      # - run:
-      #     name: Config aws cli
-      #     command: |
-      #       aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
-      #       aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
-      #       aws configure set aws_session_token $AWS_SESSION_TOKEN
-      #       aws configure set region $AWS_DEFAULT_REGION
-      # - run:
-      #     name: Debug Kubeconfig and AWS Credentials
-      #     command: |
-      #       echo "Kubeconfig contents:"
-      #       cat $KUBECONFIG
-      #       echo "AWS credentials:"
-      #       cat ~/.aws/credentials
-      # - run:
-      #     name: Apply
-      #     command: |
-      #       sudo kubectl config get-contexts
-      #       # sudo kubectl --context=arn:aws:eks:us-east-1:741929896423:cluster/devops-capstone apply -f app/.k8s/.generated/deployment.yaml -v=6
-      # - run:
-      #     name: Get pod
-      #     command: |
-      #       sudo kubectl --context=arn:aws:eks:us-east-1:741929896423:cluster/devops-capstone get pod
 
 workflows:
   default:
@@ -131,4 +125,3 @@ workflows:
       # - build-docker:
       #     requires: [install-app-dependencies, lint-app]
       - deploy-to-eks
-          # requires: [build-docker]
