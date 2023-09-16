@@ -59,42 +59,42 @@ jobs:
 # Deploy app to eks
   deploy-to-eks:
     docker:
-      - image: circleci/python:3.7
+      - image: amazon/aws-cli
     steps:
       - checkout
-      - run:
-          name: Install awscli and gettext-base
-          command: |
-            sudo pip3 install awscli
-            sudo apt-get install gettext-base
-      - run:
-          name: Install aws-iam-authenticator
-          command: |
-            curl -o aws-iam-authenticator curl -o aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.13.7/2019-06-11/bin/linux/amd64/aws-iam-authenticator
-            chmod +x ./aws-iam-authenticator
-            sudo mv ./aws-iam-authenticator /usr/local/bin/aws-iam-authenticator
+      - setup_remote_docker:
+          version: 20.10.8 # Use a compatible Docker version
       - run:
           name: Install kubectl
           command: |
-            curl -o kubectl https://amazon-eks.s3-us-west-2.amazonaws.com/1.13.7/2019-06-11/bin/linux/amd64/kubectl
-            chmod +x ./kubectl
-            sudo mv ./kubectl /usr/local/bin/kubectl
+            curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+            chmod +x kubectl
+            sudo mv kubectl /usr/local/bin/
       - run:
-          name: Connect to cluster
+          name: Authenticate with AWS EKS
           command: |
             aws eks --region us-east-1 update-kubeconfig --name devops-capstone
-            sudo kubectl config get-contexts
-            rm -rf .k8s/.generated && mkdir -p app/.k8s/.generated
-            for f in .circleci/.k8s/deployment.yaml
-              do
-              envsubst < $f > "app/.k8s/.generated/$(basename $f)"
-            done
-            aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
-            aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
-            aws configure set aws_session_token $AWS_SESSION_TOKEN
-            aws configure set region $AWS_DEFAULT_REGION
-            sudo kubectl --context=arn:aws:eks:us-east-1:741929896423:cluster/devops-capstone apply -f app/.k8s/.generated/deployment.yaml -v=6
-            sudo kubectl --context=arn:aws:eks:us-east-1:741929896423:cluster/devops-capstone get pod
+      - run:
+          name: Deploy to AWS EKS
+          command: |
+            kubectl apply -f .circleci/.k8s/deployment.yaml
+
+      # - run:
+      #     name: Connect to cluster
+      #     command: |
+      #       aws eks --region us-east-1 update-kubeconfig --name devops-capstone
+      #       sudo kubectl config get-contexts
+      #       rm -rf .k8s/.generated && mkdir -p app/.k8s/.generated
+      #       for f in .circleci/.k8s/deployment.yaml
+      #         do
+      #         envsubst < $f > "app/.k8s/.generated/$(basename $f)"
+      #       done
+      #       aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+      #       aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+      #       aws configure set aws_session_token $AWS_SESSION_TOKEN
+      #       aws configure set region $AWS_DEFAULT_REGION
+      #       sudo kubectl --context=arn:aws:eks:us-east-1:741929896423:cluster/devops-capstone apply -f app/.k8s/.generated/deployment.yaml -v=6
+      #       sudo kubectl --context=arn:aws:eks:us-east-1:741929896423:cluster/devops-capstone get pod
       # - run:
       #     name: Prepare K8S template
       #     command: |
