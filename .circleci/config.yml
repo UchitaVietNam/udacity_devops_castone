@@ -92,9 +92,12 @@ jobs:
               envsubst < $f > "app/.k8s/.generated/$(basename $f)"
             done
       - run:
-          name: Debugging
+          name: Debug Kubeconfig and AWS Credentials
           command: |
-            kubectl config view
+            echo "Kubeconfig contents:"
+            cat $KUBECONFIG
+            echo "AWS credentials:"
+            cat ~/.aws/credentials
       - run:
           name: Apply
           command: |
