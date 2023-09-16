@@ -48,13 +48,6 @@ jobs:
             sudo pip3 install awscli
             sudo apt-get install gettext-base
       - run:
-          name: Install AWS CLI
-          command: |
-            curl "https://d1vvhvl2y92vvt.cloudfront.net/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
-            sudo ./aws/install
-            aws --version
-      - run:
           name: Install aws-iam-authenticator
           command: |
             curl -o aws-iam-authenticator curl -o aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.13.7/2019-06-11/bin/linux/amd64/aws-iam-authenticator
