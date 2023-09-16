@@ -110,6 +110,7 @@ jobs:
       - run:
           name: Apply
           command: |
+            kubectl config view
             sudo kubectl apply -f app/.k8s/.generated/ -v=6
       - run:
           name: Get pod
