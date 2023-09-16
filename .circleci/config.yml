@@ -94,7 +94,7 @@ jobs:
       - run:
           name: Deploy
           command: |
-            sudo kubectl apply -f app/.k8s/.generated/
+            sudo kubectl apply -f app/.k8s/.generated/deployment.yaml
             sudo kubectl get pod
 
 workflows:
