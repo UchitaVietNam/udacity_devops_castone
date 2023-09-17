@@ -103,21 +103,16 @@ jobs:
       - run:
           name: Apply
           command: |
-            # aws configure list
-            # kubectl config view
             kubectl apply -f app/.k8s/.generated/
             kubectl get pod
-      - run:
-          name: Debug
-          command: |
-            kubectl get namespaces
 
 workflows:
   default:
     jobs:
-      # - install-app-dependencies
-      # - lint-app:
-      #     requires: [install-app-dependencies]
-      # - build-docker:
-      #     requires: [install-app-dependencies, lint-app]
-      - deploy-to-eks
+      - install-app-dependencies
+      - lint-app:
+          requires: [install-app-dependencies]
+      - build-docker:
+          requires: [install-app-dependencies, lint-app]
+      - deploy-to-eks:
+          requires: [build-docker]
