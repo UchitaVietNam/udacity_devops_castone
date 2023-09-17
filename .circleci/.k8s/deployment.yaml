@@ -15,7 +15,7 @@ spec:
       containers:
       - name: devops-capstone
         image: uchitavietnam/udacity-devops-capstone:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
   strategy:
@@ -30,6 +30,6 @@ metadata:
 spec:
   ports:
   - port: 8080
-    targetPort: 8083
+    targetPort: 8080
   selector:
     app: devops-capstone
